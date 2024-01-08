@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DPI Sensitivity Selection</title>
+<script>
+var currentOptions = [140, 280, 420];
+
+function hasSmallDifference(array) {
+    // Sort the array to ensure the differences are calculated correctly
+    array.sort(function(a, b) { return a - b; });
+    for (var i = 0; i < array.length - 1; i++) {
+        if (array[i + 1] - array[i] < 0.01) {
+            return true;  // A small difference was found
+        }
+    }
+    return false;  // No small differences found
+}
+
+function calculateOptions() {
+    var dpi = document.getElementById("dpi").value;
+    if (dpi) {
+        dpi = parseFloat(dpi);
+        currentOptions = currentOptions.map(function(option) {
+            return option / dpi;
+        });
+        
+        displayOptions(currentOptions, "一番使いにくかった感度を選んでください。");
+        document.getElementById("dpiInput").style.display = 'none';
+    }
+}
+
+function calculateAverageAndDisplayNewOptions() {
+    var selectedOption = parseFloat(document.querySelector('input[name="option"]:checked').value);
+    var remainingOptions = currentOptions.filter(function(option) {
+        return option !== selectedOption;
+    });
+    
+    var sum = remainingOptions.reduce(function(a, b) { return a + b; }, 0);
+    var average = sum / remainingOptions.length;
+    currentOptions = remainingOptions.concat(average);
+    
+    displayOptions(currentOptions, "一番使いにくかった感度を選んでください。");
+}
+
+function calculateAverage(options) {
+    var sum = options.reduce(function(a, b) { return a + b; }, 0);
+    return sum / options.length;
+}
+
+function displayOptions(options, message) {
+    if (hasSmallDifference(options)) {
+        var average = calculateAverage(options);
+        document.getElementById("message").innerText = 'あなたの最適感度は' + average.toFixed(4) + 'の周辺です';
+        document.getElementById("submit").style.display = 'none';
+        return;
+    }
+    
+    document.getElementById("message").innerText = message;
+    var optionsHtml = '';
+    options.forEach(function(option, index) {
+        optionsHtml += '<input type="radio" name="option" value="' + option + '" id="option' + index + '"><label for="option' + index + '">' + option.toFixed(4) + '</label><br>';
+    });
+    document.getElementById("options").innerHTML = optionsHtml;
+    document.getElementById("submit").style.display = 'block';
+}
+</script>
+</head>
+<body>
+<h1>DPI Sensitivity Calculator</h1>
+<div id="dpiInput">
+    <label for="dpi">DPIを入力:</label>
+    <input type="number" id="dpi" placeholder="DPI">
+    <button onclick="calculateOptions()">選択肢を表示</button>
+</div>
+<p id="message" style="margin-top: 20px;"></p>
+<div id="options" style="margin-top: 10px;">
+    <!-- Options will be displayed here -->
+</div>
+<div style="margin-top: 20px; display: none;" id="submit">
+    <button onclick="calculateAverageAndDisplayNewOptions()">選択して次へ</button>
+</div>
+</body>
+</html>
